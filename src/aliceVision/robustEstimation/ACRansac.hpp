@@ -118,6 +118,7 @@ inline ErrorIndex bestNFA(int startIndex,  // number of point required for estim
  *
  * @param[in] squaredErrors unsorted square errors, as computed by the kernel
  * @param[in,out] binCount, binMin buffers reused between calls
+ * @param[in] squaredErrors_ true if the errors are squared (bestNFA), false if they are used as is (bestNFA2)
  * @return lower bound of the best NFA, or -infinity if an error is negative or NaN (no bound)
  */
 inline double bestNFALowerBound(int startIndex,
@@ -129,7 +130,8 @@ inline double bestNFALowerBound(int startIndex,
                                 const std::vector<float>& logc_k,
                                 double errorVectorDimension,
                                 std::vector<std::size_t>& binCount,
-                                std::vector<double>& binMin)
+                                std::vector<double>& binMin,
+                                bool squaredErrors_ = true)
 {
     const std::size_t n = squaredErrors.size();
     const double infinity = std::numeric_limits<double>::infinity();
@@ -191,8 +193,8 @@ inline double bestNFALowerBound(int startIndex,
         if (binMin[bin] > maxThreshold)
             break;
 
-        // same expression as bestNFA(), with the smallest error of the bin
-        const double residual = sqrt(binMin[bin]) + std::numeric_limits<float>::epsilon();
+        // same expression as bestNFA() / bestNFA2(), with the smallest error of the bin
+        const double residual = (squaredErrors_ ? sqrt(binMin[bin]) : binMin[bin]) + std::numeric_limits<float>::epsilon();
         const double logalpha = logalpha0 + errorVectorDimension * log10(residual);
         for (std::size_t k = std::max<std::size_t>(rankBegin, startIndex + 1); k <= rankEnd; ++k)
         {
